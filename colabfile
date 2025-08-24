@@ -1,0 +1,567 @@
+#LINK TO THE COLAB:https://colab.research.google.com/drive/13zlw6uwk9_mPMjK-B0bvsFpLVM6Z5Pds?usp=sharing
+
+Project Name: Paisabazar Banking Fraud Analysis
+
+Contribution - Individual
+
+Project Summary: Paisabazaar is a financial services company that assists customers in finding and applying for various banking and credit products. Credit score of a person is a significant metric used by financial companies to analyze loan repayment probabilities. This project aims to develop a model that predicts the credit score of individuals based on various features such as income, credit card usage and payment behaviour.
+
+Github Link: https://github.com/sanjukta2019?tab=repositories
+
+Project Statement: Paisabazaar Banking Fraud Analysis; Exploratory Data Analysis
+
+
+[61]
+0s
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler
+import scipy.stats as stats
+import re
+
+[62]
+0s
+import warnings
+warnings.filterwarnings('ignore')
+
+[63]
+0s
+#load dataset
+df = pd.read_csv('/content/Paisabazar.csv')
+
+[64]
+0s
+df.head()
+
+
+[65]
+0s
+df.shape
+(100000, 28)
+
+[66]
+0s
+#duplicate values
+df.duplicated().sum()
+np.int64(0)
+
+[67]
+0s
+df.isnull().sum()
+
+
+[68]
+0s
+df.columns
+Index(['ID', 'Customer_ID', 'Month', 'Name', 'Age', 'SSN', 'Occupation',
+       'Annual_Income', 'Monthly_Inhand_Salary', 'Num_Bank_Accounts',
+       'Num_Credit_Card', 'Interest_Rate', 'Num_of_Loan', 'Type_of_Loan',
+       'Delay_from_due_date', 'Num_of_Delayed_Payment', 'Changed_Credit_Limit',
+       'Num_Credit_Inquiries', 'Credit_Mix', 'Outstanding_Debt',
+       'Credit_Utilization_Ratio', 'Credit_History_Age',
+       'Payment_of_Min_Amount', 'Total_EMI_per_month',
+       'Amount_invested_monthly', 'Payment_Behaviour', 'Monthly_Balance',
+       'Credit_Score'],
+      dtype='object')
+
+[69]
+0s
+#dataset describe
+df.describe()
+
+
+[70]
+0s
+#check unique values for each variable
+df.nunique()
+
+
+[71]
+0s
+#data wrangling
+#write your code to make your dataset analysis ready
+df_copy = df.copy()
+
+#drop unnecessary columns
+drop_columns = ['ID', 'Customer_ID', 'Name', 'SSN']
+df.drop(columns = drop_columns, inplace = True)
+
+#convert data types
+df['Num_Bank_Accounts'] = df['Num_Bank_Accounts'].astype('int64')
+df['Age'] = df['Age'].astype('int64')
+df['Num_Credit_Inquiries'] = df['Num_Credit_Inquiries'].astype('int64')
+
+#round numerical values
+df = df.round(2)
+
+[72]
+0s
+#feature engineering
+#1. Debt to income ratio
+df['Debt_to_Income_Ratio'] = df['Outstanding_Debt'] / df['Annual_Income']
+
+#2. Credit card Utilization score
+df['Credit_Card_Utilization_Score'] = df['Credit_Utilization_Ratio'] * df['Num_Credit_Card']
+
+#3. Credit Mix score
+credit_mix_mapping = {'Bad': 0, 'Standard': 1, 'Good': 2}
+df['Credit_Mix_Score'] = df['Credit_Mix'].map(credit_mix_mapping)
+
+
+#4. Payment Delay Score
+df['Payment_Delay_Score'] = df['Num_of_Delayed_Payment'] * df['Delay_from_due_date']
+What all manipulations have you done and insights you found??
+
+Data Manipulations :
+
+Removed Irrelevant Columns
+Data type conversion
+Rounded Numerical Values
+Feature Engineering
+Insights found:
+
+Better data quality
+Impact of Debt to Income Ratio
+Credit Utillisation and Risk
+Delayed Payment Behaviour
+Data Visualization, storytelling and experimenting with charts, : Understand the relationships between variables
+
+
+[73]
+0s
+#chart 1 - Distribution of credit scores
+#create count plot for credit score distribution
+sns.countplot(x = df['Credit_Score'], hue = df['Credit_Score'], palette = 'viridis', order = df['Credit_Score'].value_counts().index)
+#Set labels and title
+plt.title('Distribution of Credit Scores')
+plt.xlabel('Credit Score Category')
+plt.ylabel('Count')
+#show plot
+plt.show()
+
+Why did you pick the specify chart?
+A count plot is ideal for categorical variables as it visually represents the frequency distribution of different credit scores
+What is/are the insights found from the chart?
+The chart highlights that one credit score category is significantly more frequent than others, indicating a class imbalance in the dataset
+
+This imbalance suggests that the dataset is skewed toward "Standard" category, which could impact predictive modelling.
+
+Will the gained insights help creating a positive business impact?
+Are there any insights that lead to negative growth?, justify the specific reason
+Understanding the distribution is crucial for predictive modelling
+The imbalance may lead to biased model predictions, which could negatively impact risk assesment for loans.
+addresing this imbalance using techiniques like resampling, or class weighting can improve credit risk management and model fairness
+
+[74]
+2s
+#chart 2 ; Distribution of Age
+#create histogram for Age distribution
+sns.histplot(df['Age'], bins = 30, kde = True, color = 'blue')
+
+#set labels and title
+plt.title('Distribution of Age')
+plt.xlabel('Age')
+plt.ylabel('Frequency')
+
+#show plot
+plt.show()
+
+
+[75]
+1s
+#chart- 3 Annual Income Distribution
+#create histogram for Annual Income Distribution
+
+sns.histplot(df['Annual_Income'], bins = 30, kde = True, color = 'green')
+
+#set labels and title
+plt.title('Distribution of Annual Income')
+plt.xlabel('Annual Income')
+plt.ylabel('Frequency')
+
+#show plot
+plt.show()
+
+Chart - Credit Utillization Ratio Distribution Histogram for credit Utillization ratio distribution
+
+
+[76]
+2s
+#Chart 4- Credit Histogram for credit Utillization ratio distribution
+sns.histplot(df['Credit_Utilization_Ratio'], bins = 30, kde = True, color = 'purple')
+
+#set labels and title
+plt.title('Distribution of Credit Utilization Ratio')
+plt.xlabel('Credit Utilization Ratio')
+plt.ylabel('Frequency')
+
+#show plot
+plt.show()
+
+why did you pick the specific chart?
+A histogram helps in understanding how customers use their available credit, which is a key indictor of credit worthiness and financial behaviour
+what is/are the insights(s) found from the chart?
+Most customers have a credit utillization ratio within 25-40 range
+A portion of customers exhibits high credit utillization which may indicate financial stress or over-reliance on credit
+A lower utillization ratio is generally linked to better credit scores and responsible financial behaviour
+
+[77]
+1s
+#chart 5 - Number of credit cards distribution
+#create histogram for number of credit cards distribution
+sns.histplot(df['Num_Credit_Card'], bins = 15, kde = True, color = 'red')
+
+#set labels and title
+plt.title('Distribution of Number of Credit Cards')
+plt.xlabel('Number of Credit Cards')
+plt.ylabel('Frequency')
+
+#show plot
+plt.show()
+
+Why did you pick the specific chart??
+A histogram is ideal for showing how many credit cards customers typically hold and understanding their credit behaviour.
+what is/are the insights found from the chart?
+The majority of customers have a small number of credit cards, indicating conservative credit usage.
+Will the gained insights help creating a positive business impact?
+
+[78]
+0s
+df["Monthly_Balance"] = pd.to_numeric(df["Monthly_Balance"], errors="coerce")
+
+def parse_history_age(x):
+    if pd.isna(x): return np.nan
+    s = str(x)
+    m = re.search(r"(\d+)\s*Year", s, flags=re.IGNORECASE)
+    years = int(m.group(1)) if m else 0
+    m2 = re.search(r"(\d+)\s*Month", s, flags=re.IGNORECASE)
+    months = int(m2.group(1)) if m2 else 0
+    return years*12 + months if (years+months)>0 else np.nan
+
+df["Credit_History_Months"] = df["Credit_History_Age"].apply(parse_history_age)
+
+df["Payment_of_Min_Amount"] = df["Payment_of_Min_Amount"].astype(str).str.strip().str.title()
+order_cs = ["Poor", "Standard", "Good"]
+df["Credit_Score"] = pd.Categorical(df["Credit_Score"], categories=order_cs, ordered=True)
+
+# ===============================
+# Helper Functions
+# ===============================
+
+def hist_trimmed(series, ax, bins=30, title="", xlabel=""):
+    s = pd.to_numeric(series, errors="coerce").dropna()
+    if len(s)==0:
+        ax.set_title(title + " (no data)")
+        return
+    lo, hi = s.quantile(0.01), s.quantile(0.99)
+    s_clip = s.clip(lo, hi)
+    ax.hist(s_clip, bins=bins, color="skyblue", edgecolor="black")
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel("Count")
+
+def boxplot_by_score(series, ax, title="", ylabel=""):
+    data = [pd.to_numeric(series[df["Credit_Score"]==lvl], errors="coerce").dropna()
+            for lvl in df["Credit_Score"].cat.categories]
+    ax.boxplot(data, labels=list(df["Credit_Score"].cat.categories), showfliers=False)
+    ax.set_title(title)
+    ax.set_ylabel(ylabel)
+
+def explain(text):
+    print("\n🔎 Insight & Business Impact:")
+    print(text)
+    print("-"*60)
+
+[79]
+0s
+#chart6 Distribution of Credit_Score
+# ===============================
+# Step 4: UBM Charts with Explanations
+# ===============================
+
+# ---------- U: Univariate ----------
+plt.figure(figsize=(7,5))
+df["Credit_Score"].value_counts().sort_index().plot(kind="bar", color="orange", edgecolor="black")
+plt.title("U1. Distribution of Credit_Score")
+plt.show()
+explain("Most customers are clustered in 'Standard' and 'Poor'. This indicates limited financial discipline in the dataset. "
+        "Business can target credit improvement programs. Negative if 'Poor' dominates (higher loan risk).")
+
+
+[80]
+0s
+#chart 6 Age Distribution
+fig, ax = plt.subplots(figsize=(7,5))
+hist_trimmed(df["Age"], ax, title="U2. Age Distribution", xlabel="Age")
+plt.show()
+explain("Age distribution shows the customer base skew (likely young to mid-age). Younger customers may have lower credit maturity. "
+        "Positive: younger customers can be long-term clients. Risk: lower repayment discipline in very young segment.")
+
+
+[81]
+0s
+#Chart8 Annual Income Distribution
+fig, ax = plt.subplots(figsize=(7,5))
+hist_trimmed(df["Annual_Income"], ax, title="U3. Annual Income Distribution", xlabel="Annual Income")
+plt.show()
+explain("Annual income is right-skewed with few high earners. Middle-income dominates. "
+        "Positive: stable base for lending. Negative: low-income customers increase default risk.")
+
+
+[82]
+0s
+#chart 9 Monthly Inhand Salary Distribution
+fig, ax = plt.subplots(figsize=(7,5))
+hist_trimmed(df["Monthly_Inhand_Salary"], ax, title="U4. Monthly Inhand Salary Distribution", xlabel="Monthly Salary")
+plt.show()
+explain("Inhand salary aligns with income spread. Low disposable income indicates higher risk of delayed payments. "
+        "Business should tailor EMI offers accordingly.")
+
+
+
+[83]
+0s
+#chart9 Credit Utilization Ratio
+fig, ax = plt.subplots(figsize=(7,5))
+hist_trimmed(df["Credit_Utilization_Ratio"], ax, title="U5. Credit Utilization Ratio", xlabel="Utilization %")
+plt.show()
+explain("High utilization (>50%) indicates financial stress. Positive: credit usage is healthy if balanced. "
+        "Negative: over-leveraged customers may default more.")
+
+
+[84]
+0s
+#Chart 10 Credit Inquiries
+fig, ax = plt.subplots(figsize=(7,5))
+hist_trimmed(df["Num_Credit_Inquiries"], ax, title="U6. Credit Inquiries", xlabel="Number of Inquiries")
+plt.show()
+explain("High number of inquiries suggests risky borrowers. Business can reduce approvals in this segment. "
+        "Positive: moderate inquiries = active credit seekers. Negative: too many = desperate borrowing.")
+
+
+[85]
+0s
+#chart 11 Age by Credit_Score
+# ---------- B: Bivariate ----------
+fig, ax = plt.subplots(figsize=(7,5))
+boxplot_by_score(df["Age"], ax, "B1. Age by Credit_Score", "Age")
+plt.show()
+explain("Older customers generally have better credit scores. Younger ages concentrated in 'Poor'. "
+        "Positive: older customers are low risk. Business risk lies in very young applicants.")
+
+
+[86]
+0s
+#chart 12 Annual Income by Credit_Score
+fig, ax = plt.subplots(figsize=(7,5))
+boxplot_by_score(df["Annual_Income"], ax, "B2. Annual Income by Credit_Score", "Annual Income")
+plt.show()
+explain("Higher annual income correlates with 'Good' credit score. "
+        "Positive: income strongly linked to repayment ability. Negative: low income segment is risky.")
+
+
+[87]
+0s
+#Chart 13 Outstanding Debt by Credit_Score
+fig, ax = plt.subplots(figsize=(7,5))
+boxplot_by_score(df["Outstanding_Debt"], ax, "B3. Outstanding Debt by Credit_Score", "Debt")
+plt.show()
+explain("High debt observed in 'Poor' score group. "
+        "Positive: manageable debt in 'Good' group. Business should monitor high debt clients closely.")
+
+
+[88]
+0s
+#Chart14 Monthly Balance by Credit_Score
+fig, ax = plt.subplots(figsize=(7,5))
+boxplot_by_score(df["Monthly_Balance"], ax, "B4. Monthly Balance by Credit_Score", "Balance")
+plt.show()
+explain("Positive monthly balances are more common in 'Good' score group. "
+        "Negative balances frequent in 'Poor'. Strong signal for default risk.")
+
+
+[89]
+0s
+#Chart 15 Credit Cards by Credit_Score
+fig, ax = plt.subplots(figsize=(7,5))
+boxplot_by_score(df["Num_Credit_Card"], ax, "B5. Credit Cards by Credit_Score", "Num of Cards")
+plt.show()
+explain("More credit cards don't always mean better score. However, very low card ownership links to 'Poor'. "
+        "Balanced usage helps build credit.")
+
+
+[90]
+0s
+#Chart 16 Payment_of_Min_Amount vs Credit_Score
+plt.figure(figsize=(8,5))
+pd.crosstab(df["Payment_of_Min_Amount"], df["Credit_Score"]).plot(kind="bar")
+plt.title("B6. Payment_of_Min_Amount vs Credit_Score")
+plt.show()
+explain("'No' to paying minimum is linked to poor scores. "
+        "Positive: 'Yes' responses show financial responsibility. "
+        "Business should promote auto-minimum-payment options.")
+
+
+[91]
+0s
+#chart 17 Correlation Heatmap
+# ---------- M: Multivariate ----------
+numeric_cols = ["Age","Annual_Income","Monthly_Inhand_Salary","Outstanding_Debt",
+                "Total_EMI_per_month","Num_of_Loan","Num_of_Delayed_Payment",
+                "Num_Credit_Inquiries","Credit_Utilization_Ratio","Monthly_Balance","Credit_History_Months"]
+
+corr = df[numeric_cols].corr()
+plt.figure(figsize=(8,6))
+im = plt.imshow(corr, cmap="coolwarm", aspect="auto")
+plt.colorbar(im, fraction=0.046, pad=0.04)
+plt.xticks(range(len(corr.columns)), corr.columns, rotation=90)
+plt.yticks(range(len(corr.columns)), corr.columns)
+plt.title("M1. Correlation Heatmap")
+plt.show()
+explain("High correlation between debt, EMI, and delayed payments. Strong predictors for credit score models. "
+        "Positive: confirms model features. Negative: collinearity needs attention in ML.")
+
+
+[92]
+0s
+plt.figure(figsize=(8,5))
+pd.crosstab([df["Payment_of_Min_Amount"], df["Credit_Score"]], df["Credit_Mix"]).plot(kind="bar", stacked=True)
+plt.title("M2. Payment_of_Min_Amount × Credit_Score (stacked by Credit_Mix)")
+plt.show()
+explain("Credit mix impacts repayment. Poor scores are concentrated in 'Bad' credit mix with 'No' minimum payment. "
+        "Business can encourage credit mix diversification.")
+
+
+[93]
+5s
+plt.figure(figsize=(7,5))
+plt.scatter(df["Outstanding_Debt"], df["Total_EMI_per_month"],
+            s=df["Num_of_Loan"]*5+10, alpha=0.5, color="purple")
+plt.title("M3. Outstanding Debt vs EMI (size=Num_of_Loan)")
+plt.xlabel("Outstanding Debt")
+plt.ylabel("Total EMI per month")
+plt.show()
+explain("Scatter shows clustering: high EMI and multiple loans mostly in 'Poor' group. "
+        "Positive: business can cap EMI-to-income ratios. Negative: high cluster means higher defaults.")
+
+
+
+[94]
+0s
+# ==============================
+# Hypothesis Test 1: ANOVA
+# ==============================
+import scipy.stats as stats
+print("🔹 Hypothesis Test 1: ANOVA (Annual Income vs Credit Score groups)")
+
+anova_data = df[['Annual_Income','Credit_Score']].dropna()
+groups = [anova_data[anova_data['Credit_Score'] == cat]['Annual_Income']
+          for cat in anova_data['Credit_Score'].unique()]
+
+f_stat, p_val_anova = stats.f_oneway(*groups)
+
+print(f"F-Statistic = {f_stat:.4f}, P-Value = {p_val_anova:.4f}")
+if p_val_anova < 0.05:
+    print("✅ Reject Null Hypothesis: Income differs significantly across Credit Score categories.\n")
+else:
+    print("❌ Fail to Reject Null Hypothesis: No significant difference in Income across categories.\n")
+
+# 📊 Visualization
+plt.figure(figsize=(8,5))
+sns.boxplot(x='Credit_Score', y='Annual_Income', data=anova_data, palette="Set2")
+plt.title("Annual Income vs Credit Score Categories")
+plt.show()
+
+
+[95]
+9s
+# ==============================
+# Hypothesis Test 2: Chi-Square
+# ==============================
+print("🔹 Hypothesis Test 2: Chi-Square (Credit Utilization vs Credit Score)")
+
+contingency = pd.crosstab(df['Credit_Utilization_Ratio'], df['Credit_Score'])
+chi2, p_val_chi2, dof, expected = stats.chi2_contingency(contingency)
+
+print(f"Chi2 Statistic = {chi2:.4f}, P-Value = {p_val_chi2:.4f}")
+if p_val_chi2 < 0.05:
+    print("✅ Reject Null Hypothesis: Credit Utilization and Credit Score are dependent.\n")
+else:
+    print("❌ Fail to Reject Null Hypothesis: No significant relationship.\n")
+
+# 📊 Visualization
+plt.figure(figsize=(10,6))
+sns.heatmap(contingency, annot=True, fmt="d", cmap="YlGnBu")
+plt.title("Credit Utilization vs Credit Score (Contingency Table)")
+plt.show()
+
+
+[96]
+0s
+# ==============================
+# Hypothesis Test 3: T-Test
+# ==============================
+print("🔹 Hypothesis Test 3: T-Test (Delayed Payments between Poor vs Non-Poor customers)")
+
+delayed_poor = df[df['Credit_Score']=='Poor']['Num_of_Delayed_Payment'].dropna()
+delayed_nonpoor = df[df['Credit_Score']!='Poor']['Num_of_Delayed_Payment'].dropna()
+
+t_stat, p_val_ttest = stats.ttest_ind(delayed_poor, delayed_nonpoor, equal_var=False)
+
+print(f"T-Statistic = {t_stat:.4f}, P-Value = {p_val_ttest:.4f}")
+if p_val_ttest < 0.05:
+    print("✅ Reject Null Hypothesis: Poor vs Non-Poor customers differ significantly in delayed payments.\n")
+else:
+    print("❌ Fail to Reject Null Hypothesis: No significant difference in delayed payments.\n")
+
+# 📊 Visualization
+plt.figure(figsize=(7,5))
+sns.histplot(delayed_poor, color="red", kde=True, label="Poor")
+sns.histplot(delayed_nonpoor, color="green", kde=True, label="Non-Poor")
+plt.title("Distribution of Delayed Payments (Poor vs Non-Poor Customers)")
+plt.legend()
+plt.show()
+
+For the dataset (credit scoring), ANOVA/t-test results are most valuable because most predictive features are numerical (Income, Debt, Age, EMI, etc.) against a categorical outcome (Credit_Score = Good / Standard / Poor).
+
+Chi-Square is secondary: useful for categorical features, but fewer of those exist in the dataset.
+
+Correlation helps in feature selection but doesn’t directly tie to credit score categories.
+
+
+[97]
+0s
+#chart  - annual income vc credit score
+#create boxplot for annual income across different credit score categories
+sns.boxplot(x= 'Credit_Score', y = "Annual_Income", data = df, palette = 'viridis')
+
+#set label and title
+plt.title('Annual Income vs Credit Score')
+plt.xlabel('Credit Score')
+plt.ylabel('Annual Income')
+
+#show plot
+plt.show()
+
+
+Solution to Business Objective
+
+What do you sugest the client to achieve business Objective
+
+Explained briefly
+
+to help the client achieve their business objective of improving credit risk assesment and financial decision making, the following strategies are recommended
+
+enhace credit scoring models
+
+Targeted Loan Offers
+
+FInancial Literacy programs
+
+Risk-Based Interest Rates
+Debt Management Support
+Proactive Credit Monitoring
+Video: https://drive.google.com/file/d/1dK_V0tQgW9vRXupis2D3WpJjHe0M0N8l/view?usp=sharing
+
